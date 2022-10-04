@@ -1,0 +1,59 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+library(janitor)
+
+neighbourhood <- read_csv("../neighbourhood_rating.csv") %>% 
+  clean_names()
+green_spaces <- read_csv("../green_spaces.csv") %>% 
+  clean_names()
+community <-read_csv("../community_belonging.csv") %>% 
+  clean_names()
+```
+```{r}
+neighbourhood
+green_spaces
+community
+```
+
+
+```{r}
+community %>% 
+  count(measurement)
+
+neighbourhood %>% 
+  count(measurement)
+
+neighbourhood %>% 
+  count(feature_code
+)
+
+neighbourhood %>% 
+  count(units)
+
+neighbourhood %>% 
+  count(value)
+
+neighbourhood %>% 
+  count(neighbourhood_rating)
+
+neighbourhood %>% 
+  count(simd_quintiles)
+```
+
+```{r}
+green_spaces %>% 
+  count(date_code)
+
+green_spaces %>% 
+  count(measurement)
+
+green_spaces %>% 
+  count(distance_to_nearest_green_or_blue_space)
+```
+
+
