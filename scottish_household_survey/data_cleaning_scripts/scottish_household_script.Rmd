@@ -1,0 +1,158 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+##loading the data and libraries 
+library(tidyverse)
+library(janitor)
+
+neighbourhood_rating <- read_csv("../raw_data/neighbourhood_rating.csv") %>% 
+  clean_names()
+green_spaces <- read_csv("../raw_data/green_spaces.csv") %>% 
+  clean_names()
+community_belonging <-read_csv("../raw_data/community_belonging.csv") %>% 
+  clean_names()
+```
+
+#Great! No missing values in my data
+```{r}
+#checking missing values 
+green_spaces %>%
+  summarise(count = sum(is.na(green_spaces_joined)))
+
+community_belonging %>% 
+  summarise(count = sum(is.na(community_belonging)))
+
+neighbourhood_rating %>% 
+  summarise(count = sum(is.na(neighbourhood_rating)))
+```
+
+
+```{r}
+#council areas codes data
+council_areas <- read_csv("../raw_data/967937c4-8d67-4f39-974f-fd58c4acfda5.csv") %>% 
+  clean_names()
+```
+
+```{r}
+#dropping variables I don't need 
+council_areas<- council_areas %>% 
+  select(ca, ca_name)
+
+#renaming feature_code column for joining
+council_areas %>% 
+  rename(feature_code = ca)
+#checking for missing values
+council_areas %>% 
+  summarise(count = sum(is.na(council_areas)))
+```
+
+```{r}
+#joining datasets to council area data
+green_spaces_joined <- inner_join(
+  green_spaces, council_areas, by = c("feature_code" = "ca"))
+community_belonging_joined <- inner_join(
+  community_belonging, council_areas, by = c("feature_code" = "ca"))
+neighbourhood_rating_joined <-  inner_join(
+  neighbourhood_rating, council_areas, by = c("feature_code" = "ca"))
+```
+
+
+
+```{r}
+#factoring green_spaces variables for plotting 
+green_spaces_joined %>% 
+  mutate(age = factor(age, levels = c("16-34 years", "35-64 years",
+                                      "65 years and over", "All")),
+         simd_quintiles = factor(simd_quintiles, levels = c("20% most deprived",
+                                                            "80% least deprived",
+                                                            "All")),
+         distance_to_nearest_green_or_blue_space = factor(
+           distance_to_nearest_green_or_blue_space, levels = c(
+             "A 5 minute walk or less",
+             "Within a 6-10 minute walk",
+             "An 11 minute walk or more",
+             "Don't Know"
+           )
+         )) 
+```
+
+```{r}
+#plotting simd_quintiles for every year to see if there're significant 
+#differences for each year
+#Filtering out Simd_quintiles == "All"
+green_spaces_joined %>% 
+  filter(simd_quintiles != "All") %>% 
+ggplot(aes(x = distance_to_nearest_green_or_blue_space, fill = simd_quintiles))+
+  geom_bar(position = "dodge")+
+  facet_wrap(~date_code)
+```
+
+```{r}
+#simd quinitles and distance to green spaces
+green_spaces_joined %>%
+  filter(simd_quintiles != "All") %>% 
+    group_by(simd_quintiles, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = simd_quintiles, y = mean_percentage, fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+
+```{r}
+#type of tenure and distance to nearest green space
+green_spaces_joined %>% 
+ filter(type_of_tenure != "All") %>% 
+     group_by(type_of_tenure, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = type_of_tenure, y = mean_percentage, fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+
+```{r}
+#household type and distance to green spaces
+green_spaces_joined %>% 
+  filter(household_type != "All") %>% 
+    group_by(household_type, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = household_type, y = mean_percentage, fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+
+```{r}
+#ethnicity and distance to green spaces 
+green_spaces_joined %>% 
+  filter(ethnicity != "All") %>% 
+    group_by(ethnicity, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = ethnicity, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+
+```{r}
+#gender and distance to green spaces
+green_spaces_joined %>% 
+ filter(gender != "All") %>% 
+    group_by(gender, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = gender, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+
+```{r}
+#urban/ rural areas and distance to green spaces
+green_spaces_joined %>% 
+ filter(urban_rural_classification != "All") %>% 
+    group_by(urban_rural_classification, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = urban_rural_classification, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+
