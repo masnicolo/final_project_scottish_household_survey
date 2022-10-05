@@ -615,4 +615,102 @@ green_spaces_joined %>%
              fill = distance_to_nearest_green_or_blue_space))+
   geom_col(position = "dodge")
 ```
+#working on neighbourhood rating
+```{r}
+neighbourhood_rating_joined
+```
+
+```{r}
+community_belonging_joined
+```
+
+```{r}
+neighbourhood_rating_joined %>% 
+  count(neighbourhood_rating)
+```
+
+
+
+#interesting data, maybe I'll need to bin the data into good and poor, the difference is maybe more evident or perhaps I can plot the differences in two different plots.
+
+```{r}
+neighbourhood_rating_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All") %>% 
+    group_by(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = neighbourhood_rating, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+```{r}
+neighbourhood_rating_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All", 
+         neighbourhood_rating == "Very good") %>% 
+    group_by(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = neighbourhood_rating, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+
+```{r}
+neighbourhood_rating_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All", 
+         neighbourhood_rating == "Very poor") %>% 
+    group_by(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = neighbourhood_rating, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+
+#binning into good and very good and poor and very poor 
+
+
+```{r}
+#urban/ rural areas and distance to green spaces
+green_spaces_joined %>% 
+ filter(urban_rural_classification != "All") %>% 
+    group_by(urban_rural_classification, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = urban_rural_classification, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+```{r}
+#urban/ rural areas and distance to green spaces
+green_spaces_joined %>% 
+ filter(urban_rural_classification != "All", 
+        measurement == "Percent") %>% 
+    group_by(urban_rural_classification, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = urban_rural_classification, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_col(position = "dodge")
+```
+
+
+
+#let's do hypothesis testing on urban and rural 
+
+```{r}
+green_spaces_joined
+```
+```{r}
+green_spaces_joined %>% 
+  count(measurement)
+```
+#are there differences in green spaces access between rural or urban 
+
+```{r}
+
+```
+
+
+
 

@@ -79,6 +79,11 @@ green_spaces_joined %>%
          )) 
 ```
 
+#Are there certain groups that have local access to green space? 
+#Are there groups that are lacking access? 
+#What is the big difference in how far people have to walk to access their green space? 
+
+
 ```{r}
 #plotting simd_quintiles for every year to see if there're significant 
 #differences for each year
@@ -156,3 +161,59 @@ green_spaces_joined %>%
   geom_col(position = "dodge")
 ```
 
+#How do people in neighbourhoods with good access to green space differ from 
+#those who have no good access? Are there differences how they rate their 
+#neighbourhoods? Are there differences in how they rate their communities? 
+
+#neighbourhood
+```{r}
+#all walking distances to nearest green space
+neighbourhood_rating_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All") %>% 
+    group_by(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = neighbourhood_rating, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+```{r}
+#very good rating and walking distance to green spaces 
+neighbourhood_rating_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All", 
+         neighbourhood_rating == "Very good") %>% 
+    group_by(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = neighbourhood_rating, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+```{r}
+#very poor rating and walking distance to green spaces 
+neighbourhood_rating_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All", 
+         neighbourhood_rating == "Very poor") %>% 
+    group_by(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = neighbourhood_rating, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+#community
+```{r}
+#commuity belonging and walking distance to green spaces
+community_belonging_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All") %>% 
+    group_by(community_belonging, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = community_belonging, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+
+##interestngly we can say that communities with higher community belonging are 
+#closer to a green space. There is probably a correlation between community 
+#rating and neighbourhood rating
