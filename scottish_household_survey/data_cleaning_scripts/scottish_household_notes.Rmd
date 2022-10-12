@@ -591,6 +591,40 @@ green_spaces_joined %>%
 ```{r}
 green_spaces_joined
 ```
+```{r}
+#hypothesis test and gender 
+green_spaces_gender <- green_spaces_joined %>% 
+ filter(gender != "All", 
+        measurement == "Percent")
+```
+
+```{r}
+library(infer)
+null_distribution <- green_spaces_gender %>%
+  specify(response = value) %>%
+  hypothesize(null = "point", mu = 3.93) %>%
+  generate(reps = 10000, type = "bootstrap") %>%
+  calculate(stat = "mean")
+```
+```{r}
+null_distribution %>% 
+  visualise(bins = 30)
+```
+```{r}
+observed_gender_stat <- green_spaces_gender %>% 
+  summarise(mean_rating = mean(value))
+```
+```{r}
+null_distribution %>% 
+  visualise(bins = 30) + 
+  shade_p_value(obs_stat = observed_gender_stat$mean_rating, direction = "both")
+```
+
+```{r}
+p_value <- null_distribution %>%
+  get_p_value(obs_stat = observed_gender_stat$mean_rating, direction = "both")
+p_value
+```
 
 ```{r}
 #gender and distance to green spaces
@@ -605,7 +639,7 @@ green_spaces_joined %>%
 ```
 
 ```{r}
-#gender and distance to green spaces
+#urban/ rural and distance to green spaces
 green_spaces_joined %>% 
  filter(urban_rural_classification != "All") %>% 
     group_by(urban_rural_classification, distance_to_nearest_green_or_blue_space) %>% 
@@ -705,12 +739,695 @@ green_spaces_joined
 green_spaces_joined %>% 
   count(measurement)
 ```
-#are there differences in green spaces access between rural or urban 
+#aggregate responses dataset 
 
 ```{r}
+read_csv("../raw_data/shs_aggregate_responses (1).csv")
+```
 
+
+##time series, how does access to green spaces change over time? 
+
+```{r}
+green_spaces_joined %>% 
+  ggplot(aes(x = date_code))+
+  geom_line()
+```
+```{r}
+green_spaces_joined %>% 
+  count(distance_to_nearest_green_or_blue_space)
+```
+
+
+```{r}
+green_spaces_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All") %>% 
+    group_by(neighbourhood_rating, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = neighbourhood_rating, 
+             y = mean_percentage, 
+             fill = walking_distance_to_nearest_greenspace))+
+  geom_col(position = "dodge")
+```
+
+```{r}
+green_spaces_joined %>%
+  filter(simd_quintiles != "All") %>% 
+    group_by(date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = date_code, y = mean_percentage, fill = distance_to_nearest_green_or_blue_space))+
+  geom_line(position = "dodge")+
+  facet_wrap(~ distance_to_nearest_green_or_blue_space)
+```
+
+```{r}
+#plotting simd_quintiles for every year to see if there're significant 
+#differences for each year
+#Filtering out Simd_quintiles == "All"
+green_spaces_joined %>%
+  filter(simd_quintiles != "All") %>% 
+    group_by(simd_quintiles, date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+ggplot(aes(x = distance_to_nearest_green_or_blue_space, y = mean_percentage, fill = simd_quintiles))+
+  geom_line()+
+  facet_wrap(~date_code)
+```
+
+#plotting the highest and lowest walkikng distances 
+```{r}
+#5 minute and 11 minute or more walk over time 
+green_spaces_joined %>% 
+  filter(distance_to_nearest_green_or_blue_space == "A 5 minute walk or less" |
+           distance_to_nearest_green_or_blue_space == "An 11 minute walk or more") %>% 
+    group_by(date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = date_code, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_line()
+
+```
+
+```{r}
+#11 minute walk over time 
+green_spaces_joined %>% 
+  filter(distance_to_nearest_green_or_blue_space == "An 11 minute walk or more") %>% 
+    group_by(date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = date_code, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_line()
+```
+
+```{r}
+#5 minute walk over time 
+green_spaces_joined %>% 
+  filter(distance_to_nearest_green_or_blue_space == "A 5 minute walk or less") %>% 
+    group_by(date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = date_code, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_line()
+```
+
+
+```{r}
+#11 minute walk over time 
+green_spaces_joined %>% 
+  filter(distance_to_nearest_green_or_blue_space == "Within a 6-10 minute walk") %>% 
+    group_by(date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = date_code, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_line()
+```
+
+
+```{r}
+#All walks over time excluding "All"
+green_spaces_joined %>% 
+  filter(distance_to_nearest_green_or_blue_space != "All") %>% 
+    group_by(date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = date_code, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_line()
+
+```
+
+```{r}
+#All walks over time excluding "All" and "Don't Know"
+green_spaces_joined %>% 
+  filter(distance_to_nearest_green_or_blue_space != "All") %>% 
+    group_by(date_code, distance_to_nearest_green_or_blue_space) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = date_code, 
+             y = mean_percentage, 
+             fill = distance_to_nearest_green_or_blue_space))+
+  geom_point()+
+  geom_line()
+
+```
+
+```{r}
+green_spaces_joined %>% 
+  filter(ca_name %in% c("West Dunbartonshire", "East Lothian") &
+           distance_to_nearest_green_or_blue_space != "Don't Know" &
+           measurement == "Percent") %>% 
+  group_by(ca_name, date_code, distance_to_nearest_green_or_blue_space) %>% 
+  summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = factor(date_code),
+             y = mean_percentage,
+             colour = distance_to_nearest_green_or_blue_space)) +
+  geom_point()+
+  geom_line(aes(x = factor(date_code),
+                y = mean_percentage,
+                group = distance_to_nearest_green_or_blue_space))+
+   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  facet_wrap(~ca_name)
+```
+
+```{r}
+green_spaces_joined
+```
+```{r}
+neighbourhood_rating_joined
+```
+
+
+#is there a way to predict which households would have higher rating? 
+
+```{r}
+#aggregate response data
+aggregate_responses <- read_csv("../raw_data/shs_aggregate_responses (1).csv")
+```
+```{r}
+aggregate_responses %>% 
+  count(community_belonging)
+```
+
+```{r}
+aggregate_responses %>%
+  summarise(count = sum(is.na(satisfaction_with_nearest_green_space)))
+```
+```{r}
+aggregate_responses %>% 
+  count(satisfaction_with_nearest_green_space)
+```
+
+```{r}
+aggregate_responses %>%
+  summarise(count = sum(is.na(age)))
+```
+
+```{r}
+aggregate_responses
+```
+```{r}
+aggregate_responses %>% 
+  count(highest_education_level)
+```
+
+```{r}
+aggregate_responses_adjusted <- aggregate_responses %>% 
+  select(c(community_belonging, neighbourhood_rating, 
+           distance_to_nearest_green_space, satisfaction_with_nearest_green_space, 
+           age, gender, economic_status, household_size, highest_education_level)) %>%
+mutate(community_belonging = factor(community_belonging, 
+                                     levels = c("Not at all strongly", "Not very strongly", "Don't know", 
+                                        "Fairly strongly", 
+                                        "Very strongly")), 
+       neighbourhood_rating = factor(neighbourhood_rating, 
+                                     levels = c("Very poor", "Fairly poor", "No opinion", "Fairly good", "Very good")), 
+      distance_to_nearest_green_space = factor(distance_to_nearest_green_space, levels =
+                                                 c("A 5 minute walk or less", 
+                                                   "Within a 6-10 minute walk", 
+                                                   "Within an 11-20 minute walk", 
+                                                   "Within a 21-30 minute walk", 
+                                                   "More than a 30 minute walk away", 
+                                                   "Don't know")),
+      age = factor(age, levels = c("16 - 34 Years", "35 - 64 Years", "65 + Years")), 
+      gender = factor(gender, levels = c("Female", "Male")), 
+      economic_status = factor(economic_status, levels = c("Full Time Employment", "Other", "Part Time Employment", "Retired", "Self Employed", "Training")), 
+     highest_education_level = factor(highest_education_level, levels = 
+                                       c("Standard grade or equiv (SVQ level 1 or 2).", 
+                                         "Higher, A level or equivalent (SVQ Level 3)", 
+                                         "HNC/HND or equivalent (SVQ Level 4)", 
+                                         "Degree, Professional qualification (Above SVQ Level 4)", 
+                                         "Other qualification")))
+     aggregate_responses_adjusted
 ```
 
 
 
+```{r}
+modela <- lm(formula = household_size ~ neighbourhood_rating, data = aggregate_responses)
+```
+
+```{r}
+library(ggfortify)
+```
+
+```{r}
+autoplot(modela)
+```
+
+```{r}
+modelb <- lm(formula = neighbourhood_rating ~ satisfaction_with_nearest_green_space, data = aggregate_responses)
+```
+
+```{r}
+autoplot(modelb)
+```
+
+
+```{r}
+summary(modelb)
+```
+```{r}
+neighbourhood_rating_joined %>% 
+  count(walking_distance_to_nearest_greenspace)
+```
+
+
+#factor neighbourhood rating dataset
+
+```{r}
+neighbourhood_rating_joined %>% 
+  select(value, neighbourhood_rating, 
+           gender, urban_rural_classification, simd_quintiles, type_of_tenure, household_type, ethnicity, walking_distance_to_nearest_greenspace) 
+  filter(neighbourhood_rating != "All",
+         gender != "All",
+         urban_rural_classification != "All", 
+         simd_quintiles != "All", 
+         type_of_tenure != "All", 
+         household_type != "All", 
+         ehthnicity != "All", 
+         walking_distance_to_nearest_greenspace != "All")
+%>% 
+  mutate(neighbourhood_rating = factor(neighbourhood_rating, levels = c("Very poor", 
+                                                                        "Fairly poor", 
+                                                                        "No opinion", 
+                                                                        "Fairly good", 
+                                                                        "Very good")), 
+         gender = factor(gender, levels = c("Male", 
+                                            "Female", 
+                                            "All")), 
+         urban_rural_classification = factor(urban_rural_classification, levels = c("Urban", 
+                                                                                    "Rural", 
+                                                                                    "All")), 
+         simd_quintiles = factor(simd_quintiles, levels = c("20% most deprived", 
+                                                            "80% least deprived", 
+                                                            "All")), 
+         type_of_tenure = factor(type_of_tenure, levels = c("Social Rented", 
+                                                            "Private Rented", 
+                                                            "Owned Outright", 
+                                                            "Owned Mortgage/ Loan", 
+                                                            "All")), 
+         household_type = factor(household_type, levels = c("With Children", 
+                                                            "Pensioners", 
+                                                            "Adults", 
+                                                            "All")), 
+         ethnicity = factor(ethnicity, levels = c("White", 
+                                                  "Other", 
+                                                  "All")), 
+         walking_distance_to_nearest_greenspace = factor(walking_distance_to_nearest_greenspace, levels = c("Less than 10 minutes	", 
+                                                                                                            "More than 10 minutes", 
+                                                                                                            "All")))
+  filter(neighbourhood_rating != "All",
+         gender != "All",
+         urban_rural_classification != "All", 
+         simd_quintiles != "All", 
+         type_of_tenure != "All", 
+         household_type != "All", 
+         ehthnicity != "All", 
+         walking_distance_to_nearest_greenspace != "All")
+```
+```{r}
+neighbourhood_rating_joined
+```
+
+
+
+```{r}
+neighbourhood_rating_joined %>% 
+  filter(neighbourhood_rating != "All" |
+          walking_distance_to_nearest_greenspace != "All" |
+         gender != "All") %>% 
+  count(gender)
+
+         
+        # simd_quintiles != "All", 
+         #type_of_tenure != "All", 
+         #household_type != "All", 
+         #ehthnicity != "All", 
+         #walking_distance_to_nearest_greenspace != "All"
+ #urban_rural_classification != "All")
+```
+
+```{r}
+aggregate_responses %>% 
+  ggplot(aes(x = neighbourhood_rating, fill = satisfaction_with_nearest_green_space))+
+  geom_bar(position = "dodge")
+```
+
+```{r}
+modelc <- lm(formula = neighbourhood_rating ~ distance_to_nearest_green_space, data = aggregate_responses)
+autoplot(modelc)
+```
+
+```{r}
+modeld <- lm(formula = neighbourhood_rating ~ community_belonging, data = aggregate_responses)
+autoplot(modeld)
+```
+
+```{r}
+modele <- lm(formula = neighbourhood_rating ~ walking_distance_to_nearest_greenspace, data = neighbourhood_rating_joined)
+autoplot(modele) 
+  
+```
+```{r}
+neighbourhood_rating_joined
+```
+
+
+```{r}
+neighbourhood_rating_joined %>% 
+  count(walking_distance_to_nearest_greenspace)
+```
+
+```{r}
+neighbourhood_and_walking <- neighbourhood_rating_joined %>% 
+  select(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+mutate(neighbourhood_rating = factor(neighbourhood_rating, levels = c("Very poor", 
+                                                                        "Fairly poor", 
+                                                                        "No opinion", 
+                                                                        "Fairly good", 
+                                                                        "Very good")),
+       walking_distance_to_nearest_greenspace = factor(walking_distance_to_nearest_greenspace, levels = 
+                                                         c("Less than 10 minutes",
+                                                           "More than 10 minutes",
+                                                           "All")))
+```
+```{r}
+
+```
+
+```{r}
+aggregate_responses
+```
+
+```{r}
+aggregate_responses
+```
+
+```{r}
+neighbourhood_filtered <- neighbourhood_and_walking %>% 
+  filter(walking_distance_to_nearest_greenspace != "All")
+modele <- lm(formula = neighbourhood_rating ~ walking_distance_to_nearest_greenspace, data = neighbourhood_filtered)
+autoplot(modele)
+```
+
+```{r}
+aggregate_responses
+```
+
+```{r}
+aggregate_responses %>% 
+  count(household_size)
+```
+
+```{r}
+modelf <- lm(formula = neighbourhood_rating ~ community_belonging, data = aggregate_responses)
+autoplot(modelfq)
+
+summary(modelf)
+```
+
+```{r}
+modelg <- lm(formula = household_size ~ distance_to_nearest_green_space, data = aggregate_responses)
+autoplot(modelg)
+summary(modelg)
+```
+
+```{r}
+aggregate_responses
+```
+```{r}
+library(GGally)
+ggpairs(aggregate_responses)
+```
+
+```{r}
+aggregate_responses %>% 
+  ggplot(aes(x = neighbourhood_rating, y = distance_to_nearest_green_space)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+```
+```{r}
+aggregate_responses
+```
+```{r}
+aggregate_responses %>% 
+  summarise(cor = (neighbourhood_rating, distance_to_nearest_green_space))
+```
+
+
+#so maybe the problem is that I have factored my variable? Do I need to factor it? 
+
+```{r}
+modelh <- lm(formula = household_size ~ neighbourhood_rating, data = aggregate_responses_adjusted)
+autoplot(modelh)
+summary(modelh)
+```
+
+```{r}
+modeli <- lm(formula = household_size ~ community_belonging, data = aggregate_responses_adjusted)
+autoplot(modeli)
+summary(modeli)
+```
+
+```{r}
+modelg <- lm(formula = household_size ~ distance_to_nearest_green_space, data = aggregate_responses_adjusted)
+autoplot(modelg)
+summary(modelg)
+```
+
+```{r}
+aggregate_responses_adjusted %>% 
+  ggplot(aes(x = household_size, y = neighbourhood_rating)) +
+  geom_point()+
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+```{r}
+aggregate_responses_adjusted %>% 
+  summarise(cor = (household_size, neighbourhood_rating))
+```
+
+```{r}
+aggregate_responses_adjusted %>% 
+  ggplot(aes(x = neighbourhood_rating, y = household_size))+
+  geom_col()
+```
+
+## bin green spaces and so on into a true/ false values. 
+```{r}
+aggregate_responses
+```
+```{r}
+library(fastDummies)
+```
+
+```{r}
+aggregate_responses%>% 
+  select(select(c(community_belonging, neighbourhood_rating, 
+           distance_to_nearest_green_space, satisfaction_with_nearest_green_space, 
+           age, gender, economic_status, household_size, highest_education_level))) %>% 
+fastDummies::dummy_cols(select_columns = "neighbourhood_rating", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "community_belonging", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% fastDummies::dummy_cols(select_columns = "distance_to_nearest_green_space", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "satisfaction_with_nearest_green_space", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "age", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "gender", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "economic_status", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "highest_education_level", remove_first_dummy = TRUE, remove_selected_columns = TRUE)
+```
+
+```{r}
+#creating dummy variables for regression 
+aggregate_responses_dummies <- aggregate_responses %>% 
+  select(community_belonging, neighbourhood_rating, distance_to_nearest_green_space, satisfaction_with_nearest_green_space, 
+         age, gender, economic_status, household_size, highest_education_level) %>% 
+fastDummies::dummy_cols(select_columns = "neighbourhood_rating", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "community_belonging", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% fastDummies::dummy_cols(select_columns = "distance_to_nearest_green_space", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "satisfaction_with_nearest_green_space", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "age", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "gender", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "economic_status", remove_first_dummy = TRUE, remove_selected_columns = TRUE) %>% 
+  fastDummies::dummy_cols(select_columns = "highest_education_level", remove_first_dummy = TRUE, remove_selected_columns = TRUE)
+
+#using clean names
+aggregate_responses_dummies <- aggregate_responses_dummies %>% 
+  clean_names()
+```
+```{r}
+aggregate_responses_dummies
+```
+
+```{r}
+#only keep higher and lower values for my regression analysis
+aggregate_responses_trim <- aggregate_responses_dummies %>% 
+  select(household_size, 
+         neighbourhood_rating_very_good, 
+         neighbourhood_rating_very_poor, 
+         community_belonging_very_strongly, 
+         community_belonging_not_at_all_strongly, 
+         distance_to_nearest_green_space_more_than_a_30_minute_walk_away, 
+         distance_to_nearest_green_space_within_a_6_10_minute_walk, 
+         satisfaction_with_nearest_green_space_very_satisfied, 
+         satisfaction_with_nearest_green_space_very_dissatisfied, 
+         age_35_64_years, 
+         age_65_years, 
+         gender_male
+         )
+aggregate_responses_trim
+```
+```{r}
+#very good neighbourhood regression
+model1a <- lm(formula = neighbourhood_rating_very_good ~ distance_to_nearest_green_space_within_a_6_10_minute_walk, data = aggregate_responses_trim)
+summary(model1a)
+```
+```{r}
+#very good neighbourhood regression
+model1b <- lm(formula = neighbourhood_rating_very_good ~ satisfaction_with_nearest_green_space_very_satisfied + 
+                distance_to_nearest_green_space_within_a_6_10_minute_walk+
+                age_65_years, 
+              data = aggregate_responses_trim)
+summary(model1b)
+# not quite there yet probably 
+```
+```{r}
+#very good neighbourhood regression
+model1 <- lm(formula = neighbourhood_rating_very_good ~ , data = aggregate_responses_trim)
+summary(model1c)
+```
+
+
+
+```{r}
+modell <- lm(formula = household_size ~ neighbourhood_rating_very_poor, data = aggregate_responses_dummies)
+summary(modell)
+autoplot(modell)
+```
+```{r}
+aggregate_responses_dummies
+```
+
+```{r}
+modelm <- glm(formula = neighbourhood_rating_very_good ~ community_belonging_very_strongly, data = aggregate_responses_dummies)
+summary(modelm)
+autoplot(modelm)
+```
+
+```{r}
+modelm <- lm(formula = neighbourhood_rating_very_good ~ community_belonging_very_strongly + , data = aggregate_responses_dummies)
+summary(modelm)
+autoplot(modelm)
+```
+
+
+#attempting decision tree 
+
+
+```{r}
+aggregate_responses_dummies
+```
+
+
+```{r}
+#very good neighbourhood regression
+model1c <- lm(formula = neighbourhood_rating_very_good ~ satisfaction_with_nearest_green_space_very_satisfied + 
+                distance_to_nearest_green_space_within_a_6_10_minute_walk+
+                age_65_years + 
+                community_belonging_very_strongly+
+                community_belonging_fairly_strongly+
+                satisfaction_with_nearest_green_space_fairly_satisfied+
+                distance_to_nearest_green_space_within_an_11_20_minute_walk, 
+              data = aggregate_responses_dummies)
+summary(model1c)
+```
+```{r}
+aggregate_responses_dummies
+```
+
+```{r}
+model2c <- lm(formula = neighbourhood_rating_very_good ~ satisfaction_with_nearest_green_space_very_satisfied + 
+                distance_to_nearest_green_space_within_a_6_10_minute_walk+
+                community_belonging_very_strongly+
+                community_belonging_fairly_strongly, 
+              data = aggregate_responses_dummies)
+summary(model2c)
+```
+
+```{r}
+model3c <- lm(formula = neighbourhood_rating_very_good ~ satisfaction_with_nearest_green_space_very_satisfied + 
+                distance_to_nearest_green_space_within_a_6_10_minute_walk+
+                community_belonging_very_strongly+
+                community_belonging_fairly_strongly+
+                highest_education_level_standard_grade_or_equiv_svq_level_1_or_2,
+              data = aggregate_responses_dummies)
+summary(model3c)
+```
+```{r}
+aggregate_responses_dummies
+```
+
+```{r}
+model4c <- lm(formula = neighbourhood_rating_very_good ~ community_belonging_very_strongly+
+                satisfaction_with_nearest_green_space_very_satisfied+
+                highest_education_level_standard_grade_or_equiv_svq_level_1_or_2+
+                community_belonging_fairly_strongly,
+              data = aggregate_responses_dummies)
+summary(model4c)
+```
+#logistic regression 
+```{r}
+model5c <- glm(formula = neighbourhood_rating_very_good ~ community_belonging_very_strongly+
+                satisfaction_with_nearest_green_space_very_satisfied+
+                highest_education_level_standard_grade_or_equiv_svq_level_1_or_2+
+                community_belonging_fairly_strongly,
+              data = aggregate_responses_dummies, family = binomial(link = "logit"))
+
+summary(model5c)
+```
+```{r}
+library(modelr)
+neighbourhood_rating_4_pred <- aggregate_responses_dummies %>% 
+  add_predictions(model5c, type = "response")
+```
+
+```{r}
+library(pROC)
+roc_obj_4_pred <- neighbourhood_rating_4_pred %>% 
+  roc(response = neighbourhood_rating_very_good, predictor = pred)
+
+roc_curve <- ggroc(data = roc_obj_4_pred, legacy.axes = TRUE)+
+  coord_fixed()+
+  ylab("sensitivity (True Positive Rate)")+
+  xlab("1-specificity (True Negative Rate)")
+
+roc_curve
+```
+
+#The closer the curve is to the top left corner, the more effective the classifier. 
+The ‘perfect classifier’ would have a TPR of 1.0 and an FPR of 0.0. This corresponds to the top-left point on the chart! It’s possible for a classifier to have a curve ‘below’ the diagonal, in which case, it performs more poorly than random guessing. Quite an achievement!
+The upper right corner of the curves corresponds to low threshold probability (i.e. ’classify everything as positive). The lower left corner therefore corresponds to high threshold probability.
+If our ROC curve has an intercept of 0.5 sensitivity = specificty. 
+
+```{r}
+aggregate_responses_dummies
+```
+
+
+```{r}
+model6c <- glm(formula = neighbourhood_rating_very_good ~ community_belonging_not_very_strongly+
+                 satisfaction_with_nearest_green_space_very_satisfied+
+                 highest_education_level_standard_grade_or_equiv_svq_level_1_or_2+
+                 community_belonging_fairly_strongly,
+              data = aggregate_responses_dummies, family = binomial(link = "logit"))
+
+summary(model6c)
+```
+
+```{r}
+anova(model5c, model6c, test = "Chisq")
+```
+
+```{r}
+auc(roc_obj_4_pred)
+```
 
