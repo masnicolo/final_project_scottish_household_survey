@@ -14,6 +14,10 @@ green_spaces <- read_csv("../raw_data/green_spaces.csv") %>%
   clean_names()
 community_belonging <-read_csv("../raw_data/community_belonging.csv") %>% 
   clean_names()
+
+neighbourhood_rating
+green_spaces
+community_belonging
 ```
 
 #Great! No missing values in my data

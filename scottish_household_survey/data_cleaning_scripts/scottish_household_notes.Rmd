@@ -1431,3 +1431,53 @@ anova(model5c, model6c, test = "Chisq")
 auc(roc_obj_4_pred)
 ```
 
+```{r}
+neighbourhood_rating_joined %>% 
+  count(ca_name) %>% 
+  arrange(n)
+```
+
+```{r}
+aggregate_responses %>% 
+  count(year)
+```
+```{r}
+#all walking distances to nearest green space
+neighbourhood_rating_joined %>% 
+  filter(walking_distance_to_nearest_greenspace != "All") %>% 
+    group_by(neighbourhood_rating, walking_distance_to_nearest_greenspace) %>% 
+    summarise(mean_percentage = mean(value)) %>% 
+  ggplot(aes(x = walking_distance_to_nearest_greenspace, 
+             y = mean_percentage, 
+             fill = neighbourhood_rating))+
+  geom_col(position = "dodge") +
+    scale_y_continuous(labels = function(x) paste0(x*1, "%"))+
+  labs(
+    x = "Neighbourhood rating",
+    y = "Mean value (%)",
+    title = "\nNeighbourhood rating and distance to nearest green space",
+    fill = "Walking distance to nearest green space"
+  )
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
